@@ -9,7 +9,7 @@ const CATEGORIES = [
   { id: 'primeros', title: 'Primeros Platos', icon: '🥗', colorBg: 'bg-purple-100 text-purple-700' },
   { id: 'segundos', title: 'Segundos Platos', icon: '🥩', colorBg: 'bg-amber-100 text-amber-700' },
   { id: 'postres', title: 'Postres Caseros', icon: '🍰', colorBg: 'bg-emerald-100 text-emerald-700' },
-  { id: 'bebidas', title: 'Bebidas & Sugerencias', icon: '🍷', colorBg: 'bg-blue-100 text-blue-700' }
+  { id: 'bebidas', title: 'Bebidas & Sugerencias', icon: '🍷', colorBg: 'bg-[#F5D6D4] text-[#8B2320]' }
 ];
 
 export default function AdminDashboard({
@@ -85,18 +85,18 @@ export default function AdminDashboard({
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       {/* Hero Cyan Banner (Matches reference top card exactly) */}
-      <div className="hero-cyan-banner p-6 sm:p-8 space-y-6">
+      <div className="hero-meson p-6 sm:p-8 space-y-6">
         {/* Top Profile Pill (Matching Reference) */}
         <div className="flex items-center justify-between">
           <div className="white-profile-pill px-4 py-2 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#00b4d8] text-white font-black flex items-center justify-center text-base shadow-sm">
+            <div className="w-9 h-9 rounded-full bg-[#8B2320] text-white font-black flex items-center justify-center text-base shadow-sm">
               {restaurant?.icon || '🍷'}
             </div>
             <div>
-              <h2 className="font-extrabold text-slate-900 text-sm leading-tight">
+              <h2 className="font-extrabold text-stone-900 text-sm leading-tight">
                 {restaurant?.name || 'Paco Mer'}
               </h2>
-              <p className="text-[11px] text-slate-400 font-semibold">@pacomer</p>
+              <p className="text-[11px] text-stone-400 font-semibold">@pacomer</p>
             </div>
           </div>
 
@@ -147,7 +147,7 @@ export default function AdminDashboard({
             onClick={() => onOpenDishModal(null, 'primeros')}
             className="btn-hero-white flex items-center gap-2 text-sm"
           >
-            <Plus className="w-4 h-4 text-[#00b4d8]" />
+            <Plus className="w-4 h-4 text-[#8B2320]" />
             <span>+ Añadir Plato</span>
           </button>
 
@@ -172,9 +172,9 @@ export default function AdminDashboard({
       {/* Main Content Area Below (Matching Reference Pure White Rounded Cards) */}
       <div className="px-4 sm:px-0 space-y-6">
         {/* Search Bar & Preset Quick Button */}
-        <div className="fintech-card p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="meson-card p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="w-full sm:w-80 relative">
-            <Search className="w-4 h-4 text-slate-400 input-icon-left" />
+            <Search className="w-4 h-4 text-stone-400 input-icon-left" />
             <input
               type="text"
               placeholder="Buscar plato en la carta..."
@@ -196,13 +196,13 @@ export default function AdminDashboard({
         </div>
 
         {/* Restaurant Configuration Details */}
-        <div className="fintech-card p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="meson-card p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-stone-100 pb-3">
             <div className="flex items-center gap-2">
-              <h3 className="font-extrabold text-slate-900 text-sm">
+              <h3 className="font-extrabold text-stone-900 text-sm">
                 Datos del Restaurante
               </h3>
-              <Info className="w-3.5 h-3.5 text-slate-400" />
+              <Info className="w-3.5 h-3.5 text-stone-400" />
             </div>
           </div>
 
@@ -213,7 +213,7 @@ export default function AdminDashboard({
                 type="text"
                 value={restaurant?.name ?? ''}
                 onChange={e => handleRestaurantChange('name', e.target.value)}
-                className="form-input font-bold text-slate-900"
+                className="form-input font-bold text-stone-900"
               />
             </div>
 
@@ -223,7 +223,7 @@ export default function AdminDashboard({
                 type="text"
                 value={restaurant?.fullPrice ?? ''}
                 onChange={e => handleRestaurantChange('fullPrice', e.target.value)}
-                className="form-input font-extrabold text-[#00b4d8]"
+                className="form-input font-extrabold text-[#8B2320]"
               />
             </div>
 
@@ -253,26 +253,26 @@ export default function AdminDashboard({
         {/* Menu Section Cards (Matching Reference Accounts Section) */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-1.5">
+            <h3 className="font-extrabold text-stone-900 text-base flex items-center gap-1.5">
               <span>Secciones del Menú de Hoy</span>
-              <Info className="w-4 h-4 text-slate-400" />
+              <Info className="w-4 h-4 text-stone-400" />
             </h3>
           </div>
 
           {CATEGORIES.map(cat => {
             const catDishes = getDishesByCategory(cat.id);
             return (
-              <div key={cat.id} className="fintech-card p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div key={cat.id} className="meson-card p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-stone-100 pb-3">
                   <div className="flex items-center gap-3">
                     <div className={`w-9 h-9 rounded-full ${cat.colorBg} flex items-center justify-center font-bold text-base shadow-sm`}>
                       {cat.icon}
                     </div>
                     <div>
-                      <h4 className="font-extrabold text-slate-900 text-base">
+                      <h4 className="font-extrabold text-stone-900 text-base">
                         {cat.title}
                       </h4>
-                      <p className="text-[11px] text-slate-400 font-semibold">
+                      <p className="text-[11px] text-stone-400 font-semibold">
                         {catDishes.length} {catDishes.length === 1 ? 'opción disponible' : 'opciones disponibles'}
                       </p>
                     </div>
@@ -280,7 +280,7 @@ export default function AdminDashboard({
 
                   <button
                     onClick={() => onOpenDishModal(null, cat.id)}
-                    className="btn btn-sm btn-cyan font-bold text-xs"
+                    className="btn btn-sm btn-meson font-bold text-xs"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Añadir</span>
@@ -288,11 +288,11 @@ export default function AdminDashboard({
                 </div>
 
                 {catDishes.length === 0 ? (
-                  <div className="py-4 text-center text-xs text-slate-400 font-medium">
+                  <div className="py-4 text-center text-xs text-stone-400 font-medium">
                     Sin platos en esta sección. Haz clic en "+ Añadir".
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-stone-100">
                     {catDishes.map((dish) => {
                       const { index: posInCategory, total: categoryTotal } = getPositionInCategory(dish);
                       return (
@@ -304,7 +304,7 @@ export default function AdminDashboard({
                         >
                           <div className="space-y-0.5">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-bold text-sm text-slate-900">
+                              <span className="font-bold text-sm text-stone-900">
                                 {dish.name}
                               </span>
                               {dish.isChefSpecial && (
@@ -313,13 +313,13 @@ export default function AdminDashboard({
                                 </span>
                               )}
                               {parseFloat(dish.supplement) > 0 && (
-                                <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-[#00b4d8] font-extrabold text-xs">
+                                <span className="px-2.5 py-0.5 rounded-full bg-[#FBEDEC] text-[#8B2320] font-extrabold text-xs">
                                   +{dish.supplement}€
                                 </span>
                               )}
                             </div>
                             {dish.description && (
-                              <p className="text-xs text-slate-500">
+                              <p className="text-xs text-stone-500">
                                 {dish.description}
                               </p>
                             )}
@@ -328,7 +328,7 @@ export default function AdminDashboard({
                           {/* Controls */}
                           <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                             <div className="flex items-center gap-2 mr-2">
-                              <span className={`text-xs font-bold ${dish.isAvailable ? 'text-[#00b4d8]' : 'text-slate-400'}`}>
+                              <span className={`text-xs font-bold ${dish.isAvailable ? 'text-[#8B2320]' : 'text-stone-400'}`}>
                                 {dish.isAvailable ? 'Disponible' : 'Agotado'}
                               </span>
                               <label className="switch">
@@ -341,11 +341,11 @@ export default function AdminDashboard({
                               </label>
                             </div>
 
-                            <div className="flex items-center border border-slate-200 rounded-full overflow-hidden">
+                            <div className="flex items-center border border-stone-200 rounded-full overflow-hidden">
                               <button
                                 onClick={() => moveDish(dish, 'up')}
                                 disabled={posInCategory <= 0}
-                                className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30 border-r border-slate-200"
+                                className="px-2.5 py-1 bg-white hover:bg-stone-50 text-stone-600 disabled:opacity-30 border-r border-stone-200"
                                 title="Subir"
                               >
                                 <ArrowUp className="w-3.5 h-3.5" />
@@ -353,7 +353,7 @@ export default function AdminDashboard({
                               <button
                                 onClick={() => moveDish(dish, 'down')}
                                 disabled={posInCategory === categoryTotal - 1}
-                                className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30"
+                                className="px-2.5 py-1 bg-white hover:bg-stone-50 text-stone-600 disabled:opacity-30"
                                 title="Bajar"
                               >
                                 <ArrowDown className="w-3.5 h-3.5" />
@@ -365,7 +365,7 @@ export default function AdminDashboard({
                               className="btn btn-secondary btn-icon btn-sm"
                               title="Editar"
                             >
-                              <Edit2 className="w-3.5 h-3.5 text-slate-600" />
+                              <Edit2 className="w-3.5 h-3.5 text-stone-600" />
                             </button>
 
                             <button
@@ -398,9 +398,9 @@ export default function AdminDashboard({
       {showMobilePreviewModal && (
         <div className="modal-overlay">
           <div className="modal-content max-w-md p-4">
-            <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200">
-              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-                <Smartphone className="w-4 h-4 text-[#00b4d8]" />
+            <div className="flex items-center justify-between pb-2 mb-3 border-b border-stone-200">
+              <h3 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                <Smartphone className="w-4 h-4 text-[#8B2320]" />
                 <span>Vista Previa Carta Móvil</span>
               </h3>
               <button onClick={() => setShowMobilePreviewModal(false)} className="btn btn-secondary btn-icon btn-sm">

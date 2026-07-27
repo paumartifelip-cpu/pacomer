@@ -18,8 +18,8 @@ export default function PresetSelectorModal({ isOpen, onClose, onApplyPreset }) 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content max-w-lg" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
-          <h2 className="font-bold text-base text-slate-900 flex items-center gap-2">
+        <div className="flex items-center justify-between pb-3 mb-3 border-b border-stone-200">
+          <h2 className="font-bold text-base text-stone-900 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-amber-600" />
             <span>Cargar Ejemplos de Menú</span>
           </h2>
@@ -28,7 +28,7 @@ export default function PresetSelectorModal({ isOpen, onClose, onApplyPreset }) 
           </button>
         </div>
 
-        <p className="text-xs text-slate-500 mb-4">
+        <p className="text-xs text-stone-500 mb-4">
           Haz clic en cualquier menú para cargarlo en tu editor. Luego podrás modificar o ajustar lo que quieras.
         </p>
 
@@ -36,21 +36,21 @@ export default function PresetSelectorModal({ isOpen, onClose, onApplyPreset }) 
           {PRESET_MENUS.map(preset => (
             <div
               key={preset.id}
-              className="p-4 rounded-lg border border-slate-200 hover:border-slate-400 bg-white cursor-pointer transition-all space-y-2"
+              className="p-4 rounded-lg border border-stone-200 hover:border-stone-400 bg-white cursor-pointer transition-all space-y-2"
               onClick={() => {
                 onApplyPreset(preset);
                 onClose();
               }}
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-sm">
+                <h3 className="font-bold text-stone-900 text-sm">
                   {preset.title}
                 </h3>
-                <span className="text-xs font-bold bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-200">
+                <span className="text-xs font-bold bg-stone-100 text-stone-800 px-2 py-0.5 rounded border border-stone-200">
                   {preset.fullPrice} €
                 </span>
               </div>
-              <p className="text-xs text-slate-500">{preset.description}</p>
+              <p className="text-xs text-stone-500">{preset.description}</p>
 
               <div className="pt-2 flex justify-end">
                 <button className="btn btn-sm btn-primary">

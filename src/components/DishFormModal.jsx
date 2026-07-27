@@ -91,8 +91,8 @@ export default function DishFormModal({ isOpen, onClose, onSave, editingDish, de
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
-          <h2 className="font-bold text-base text-slate-900">
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-stone-200">
+          <h2 className="font-bold text-base text-stone-900">
             {editingDish ? 'Editar Plato' : 'Añadir Plato'}
           </h2>
           <button onClick={onClose} className="btn btn-secondary btn-icon">
@@ -162,7 +162,7 @@ export default function DishFormModal({ isOpen, onClose, onSave, editingDish, de
             </div>
 
             <div className="flex flex-col justify-center gap-2 pt-2">
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-stone-700">
                 <input
                   type="checkbox"
                   checked={formData.isChefSpecial}
@@ -172,7 +172,7 @@ export default function DishFormModal({ isOpen, onClose, onSave, editingDish, de
                 <span>Especialidad ⭐</span>
               </label>
 
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-stone-700">
                 <input
                   type="checkbox"
                   checked={formData.isAvailable}
@@ -198,8 +198,8 @@ export default function DishFormModal({ isOpen, onClose, onSave, editingDish, de
                     onClick={() => toggleAllergen(allergen.id)}
                     className={`flex items-center gap-1 p-1.5 rounded text-xs border transition-all ${
                       selected
-                        ? 'bg-slate-900 text-white font-bold border-slate-900'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        ? 'bg-stone-900 text-white font-bold border-stone-900'
+                        : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
                     }`}
                   >
                     <span>{allergen.icon}</span>
@@ -210,7 +210,7 @@ export default function DishFormModal({ isOpen, onClose, onSave, editingDish, de
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-stone-200">
             <button type="button" onClick={onClose} className="btn btn-secondary">
               Cancelar
             </button>

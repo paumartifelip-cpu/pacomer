@@ -61,13 +61,13 @@ export default function ShareMenuModal({ isOpen, onClose, restaurant, dishes, on
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content max-w-lg space-y-4" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-200">
+        <div className="flex items-center justify-between gap-3 pb-3 border-b border-stone-200">
           <div>
-            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <QrCode className="w-5 h-5 text-[#00b4d8]" />
+            <h2 className="text-base font-bold text-stone-900 flex items-center gap-2">
+              <QrCode className="w-5 h-5 text-[#8B2320]" />
               <span>Compartir la Carta</span>
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-stone-500">
               El QR y el enlace llevan la carta dentro: funcionan en cualquier móvil, sin internet del restaurante.
             </p>
           </div>
@@ -77,8 +77,8 @@ export default function ShareMenuModal({ isOpen, onClose, restaurant, dishes, on
         </div>
 
         {/* QR */}
-        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-center space-y-3">
-          <div className="bg-white p-3 rounded-2xl inline-block shadow-md border border-slate-200">
+        <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 text-center space-y-3">
+          <div className="bg-white p-3 rounded-2xl inline-block shadow-md border border-stone-200">
             {qrDataUrl ? (
               <img
                 src={qrDataUrl}
@@ -86,7 +86,7 @@ export default function ShareMenuModal({ isOpen, onClose, restaurant, dishes, on
                 className="w-[190px] h-[190px] object-contain block mx-auto"
               />
             ) : (
-              <div className="w-[190px] h-[190px] flex items-center justify-center text-center text-xs text-slate-400 font-bold px-3">
+              <div className="w-[190px] h-[190px] flex items-center justify-center text-center text-xs text-stone-400 font-bold px-3">
                 {isTooLong ? 'La carta es demasiado larga para un QR' : 'Generando QR…'}
               </div>
             )}
@@ -107,7 +107,7 @@ export default function ShareMenuModal({ isOpen, onClose, restaurant, dishes, on
             </div>
           )}
 
-          <p className="text-xs text-slate-600 font-medium px-2">
+          <p className="text-xs text-stone-600 font-medium px-2">
             Cada vez que cambies un plato se genera un QR nuevo. Vuelve a imprimirlo o a enviarlo
             para que tus clientes vean la carta actualizada.
           </p>
@@ -116,7 +116,7 @@ export default function ShareMenuModal({ isOpen, onClose, restaurant, dishes, on
             <button
               onClick={downloadQrImage}
               disabled={!isReady}
-              className="btn btn-cyan text-xs font-extrabold shadow-md"
+              className="btn btn-meson text-xs font-extrabold shadow-md"
             >
               <Download className="w-4 h-4" />
               <span>Descargar QR (PNG)</span>
@@ -143,22 +143,22 @@ export default function ShareMenuModal({ isOpen, onClose, restaurant, dishes, on
               disabled={!isReady}
               className="btn btn-secondary text-xs font-semibold w-full justify-start px-3 py-2.5"
             >
-              {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-600" />}
+              {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-stone-600" />}
               <span>{copiedLink ? '¡Enlace Copiado!' : 'Copiar Enlace'}</span>
             </button>
           </div>
         </div>
 
         {/* Link preview */}
-        <div className="p-3 bg-white border border-slate-200 rounded-2xl text-xs space-y-1">
-          <span className="text-slate-400 font-bold uppercase text-[10px]">Enlace de la carta:</span>
+        <div className="p-3 bg-white border border-stone-200 rounded-2xl text-xs space-y-1">
+          <span className="text-stone-400 font-bold uppercase text-[10px]">Enlace de la carta:</span>
           <div className="flex items-center gap-2">
             <input
               type="text"
               readOnly
               value={shareUrl}
               onFocus={e => e.target.select()}
-              className="w-full min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-slate-600 font-mono text-[11px]"
+              className="w-full min-w-0 bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5 text-stone-600 font-mono text-[11px]"
             />
             {isReady && (
               <a

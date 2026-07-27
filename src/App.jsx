@@ -6,6 +6,7 @@ import QrStandGenerator from './components/QrStandGenerator';
 import DishFormModal from './components/DishFormModal';
 import PresetSelectorModal from './components/PresetSelectorModal';
 import ShareMenuModal from './components/ShareMenuModal';
+import LandingPage from './components/LandingPage';
 import { INITIAL_RESTAURANT, INITIAL_DISHES } from './data/presetMenus';
 import { parseMenuFromCurrentUrl, currentUrlHasMenu } from './utils/urlEncoder';
 import {
@@ -29,7 +30,7 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="p-8 text-center text-slate-700 space-y-3">
+        <div className="p-8 text-center text-stone-700 space-y-3">
           <p className="font-bold">Ha ocurrido un problema al cargar esta sección.</p>
           <button
             onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}
@@ -62,6 +63,10 @@ function detectCustomerMode() {
 export default function App() {
   const [isCustomerMode] = useState(detectCustomerMode);
   const [activeTab, setActiveTab] = useState('admin');
+
+  // The owner lands on the presentation page first. Diners never see it: a
+  // scanned QR goes straight to the menu.
+  const [showLanding, setShowLanding] = useState(() => !detectCustomerMode());
 
   // Lazy initialisers: localStorage is read on mount only, never on re-render.
   const [restaurant, setRestaurant] = useState(
@@ -181,7 +186,7 @@ export default function App() {
         <main className="flex-1">
           <ErrorBoundary>
             {isDecodingSharedMenu ? (
-              <div className="py-24 text-center text-sm font-bold text-slate-400">
+              <div className="py-24 text-center text-sm font-bold text-stone-400">
                 Cargando la carta…
               </div>
             ) : (
@@ -193,9 +198,23 @@ export default function App() {
     );
   }
 
+  // Presentation page: what the app is for, before the tool itself.
+  if (showLanding) {
+    return (
+      <ErrorBoundary>
+        <LandingPage onEnter={() => setShowLanding(false)} />
+      </ErrorBoundary>
+    );
+  }
+
   return (
     <div className="app-container">
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} onShare={() => setIsShareModalOpen(true)} />
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onShare={() => setIsShareModalOpen(true)}
+        onBackToLanding={() => setShowLanding(true)}
+      />
 
       <main className="flex-1">
         <ErrorBoundary>
@@ -214,7 +233,7 @@ export default function App() {
 
           {activeTab === 'customer' && (
             isDecodingSharedMenu ? (
-              <div className="py-24 text-center text-sm font-bold text-slate-400">
+              <div className="py-24 text-center text-sm font-bold text-stone-400">
                 Cargando la carta…
               </div>
             ) : (

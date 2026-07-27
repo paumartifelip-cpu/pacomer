@@ -33,13 +33,13 @@ export default function QrStandGenerator({ restaurant, dishes, onShowToast }) {
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
       {/* Actions */}
-      <div className="fintech-card p-5 no-print flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="meson-card p-5 no-print flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
-          <h1 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-            <QrCode className="w-5 h-5 text-[#00b4d8]" />
+          <h1 className="text-lg font-extrabold text-stone-900 flex items-center gap-2">
+            <QrCode className="w-5 h-5 text-[#8B2320]" />
             <span>Cartel de Mesa con la Carta</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5 font-medium">
+          <p className="text-xs text-stone-500 mt-0.5 font-medium">
             El QR lleva la carta dentro, así que cualquier cliente la ve al escanearlo.
             Vuelve a imprimirlo cuando cambies el menú.
           </p>
@@ -47,7 +47,7 @@ export default function QrStandGenerator({ restaurant, dishes, onShowToast }) {
 
         <div className="flex items-center gap-2 flex-wrap">
           <button onClick={downloadQrImage} disabled={!isReady} className="btn btn-secondary text-xs font-semibold">
-            <Download className="w-3.5 h-3.5 text-slate-600" />
+            <Download className="w-3.5 h-3.5 text-stone-600" />
             <span>Descargar PNG</span>
           </button>
 
@@ -56,7 +56,7 @@ export default function QrStandGenerator({ restaurant, dishes, onShowToast }) {
             <span>{copied ? '¡Copiado!' : 'Copiar Enlace'}</span>
           </button>
 
-          <button onClick={() => window.print()} disabled={!isReady} className="btn btn-cyan text-xs font-bold shadow-md">
+          <button onClick={() => window.print()} disabled={!isReady} className="btn btn-meson text-xs font-bold shadow-md">
             <Printer className="w-3.5 h-3.5" />
             <span>Imprimir Cartel (PDF)</span>
           </button>
@@ -75,18 +75,18 @@ export default function QrStandGenerator({ restaurant, dishes, onShowToast }) {
 
       {/* Printable poster */}
       <div className="printable-area flex justify-center py-4">
-        <div className="w-full max-w-sm p-8 bg-white border-2 border-slate-900 rounded-3xl text-center shadow-lg space-y-6">
-          <div className="space-y-1 pb-4 border-b border-slate-200">
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+        <div className="w-full max-w-sm p-8 bg-white border-2 border-stone-900 rounded-3xl text-center shadow-lg space-y-6">
+          <div className="space-y-1 pb-4 border-b border-stone-200">
+            <h2 className="text-2xl font-black text-stone-900 tracking-tight">
               {restaurant?.name || 'Mesón Paco Mer'}
             </h2>
-            <p className="text-[11px] font-extrabold text-[#00b4d8] uppercase tracking-widest">
+            <p className="text-[11px] font-extrabold text-[#8B2320] uppercase tracking-widest">
               MENÚ DEL DÍA
             </p>
           </div>
 
           <div className="my-4 flex justify-center">
-            <div className="p-3 bg-white border border-slate-200 rounded-2xl inline-block shadow-md">
+            <div className="p-3 bg-white border border-stone-200 rounded-2xl inline-block shadow-md">
               {qrDataUrl ? (
                 <img
                   src={qrDataUrl}
@@ -94,7 +94,7 @@ export default function QrStandGenerator({ restaurant, dishes, onShowToast }) {
                   className="poster-qr w-[240px] h-[240px] object-contain block mx-auto"
                 />
               ) : (
-                <div className="w-[220px] h-[220px] flex items-center justify-center text-center px-4 text-xs text-slate-400 font-bold">
+                <div className="w-[220px] h-[220px] flex items-center justify-center text-center px-4 text-xs text-stone-400 font-bold">
                   {isTooLong ? 'La carta no cabe en un QR' : 'Generando QR…'}
                 </div>
               )}
@@ -102,16 +102,16 @@ export default function QrStandGenerator({ restaurant, dishes, onShowToast }) {
           </div>
 
           <div className="space-y-3">
-            <p className="font-bold text-xs text-slate-800 leading-snug px-2">
+            <p className="font-bold text-xs text-stone-800 leading-snug px-2">
               📱 Escanea este código con la cámara de tu teléfono para ver el Menú de Hoy.
             </p>
 
-            <div className="inline-block px-4 py-1.5 rounded-full bg-blue-50 text-[#00b4d8] text-xs font-extrabold border border-blue-100">
+            <div className="inline-block px-4 py-1.5 rounded-full bg-[#FBEDEC] text-[#8B2320] text-xs font-extrabold border border-[#F5D6D4]">
               Menú Completo: {restaurant?.fullPrice || '13.50'} {restaurant?.currency || '€'}
             </div>
 
             {restaurant?.includesText && (
-              <p className="text-[11px] text-slate-500 font-medium">
+              <p className="text-[11px] text-stone-500 font-medium">
                 ✨ {restaurant.includesText}
               </p>
             )}
