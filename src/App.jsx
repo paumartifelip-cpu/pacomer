@@ -44,16 +44,24 @@ class ErrorBoundary extends Component {
   }
 }
 
+/**
+ * A scanned QR or a shared link opens in customer mode: the diner gets the menu
+ * and nothing else. No management tabs, no editing, and no writes to storage,
+ * so opening your own link can never overwrite the menu you are editing.
+ * Decided once from the landing URL and never changed afterwards.
+ */
+function detectCustomerMode() {
+  try {
+    const hash = window.location.hash;
+    return hash === '#view' || hash.includes('menu=');
+  } catch (e) {
+    return false;
+  }
+}
+
 export default function App() {
-  // A link with an embedded menu always lands on the customer view.
-  const [activeTab, setActiveTab] = useState(() => {
-    try {
-      const hash = window.location.hash;
-      return hash === '#view' || hash.includes('menu=') ? 'customer' : 'admin';
-    } catch (e) {
-      return 'admin';
-    }
-  });
+  const [isCustomerMode] = useState(detectCustomerMode);
+  const [activeTab, setActiveTab] = useState('admin');
 
   // Lazy initialisers: localStorage is read on mount only, never on re-render.
   const [restaurant, setRestaurant] = useState(
@@ -119,13 +127,24 @@ export default function App() {
   // state updaters means no duplicate broadcasts under StrictMode and no risk
   // of publishing a stale restaurant alongside fresh dishes.
   useEffect(() => {
+    // Customer mode is strictly read-only: the menu comes from the link, which
+    // stays the source of truth on reload.
+    if (isCustomerMode) return;
+
     if (skipBroadcastRef.current) {
       skipBroadcastRef.current = false;
       persistMenu(restaurant, dishes);
       return;
     }
     broadcastMenuUpdate(restaurant, dishes);
-  }, [restaurant, dishes]);
+  }, [restaurant, dishes, isCustomerMode]);
+
+  // Show the restaurant's own name in the browser tab for diners.
+  useEffect(() => {
+    if (isCustomerMode && restaurant?.name) {
+      document.title = `${restaurant.name} | Menú del Día`;
+    }
+  }, [isCustomerMode, restaurant?.name]);
 
   const handleOpenDishModal = (dish = null, category = 'primeros') => {
     setEditingDish(dish);
@@ -153,6 +172,26 @@ export default function App() {
     })));
     triggerToast(`Plantilla "${preset.title}" cargada`);
   };
+
+  // Diner view: just the menu. None of the management UI is mounted, so there
+  // is nothing to click through to and nothing to edit.
+  if (isCustomerMode) {
+    return (
+      <div className="app-container">
+        <main className="flex-1">
+          <ErrorBoundary>
+            {isDecodingSharedMenu ? (
+              <div className="py-24 text-center text-sm font-bold text-slate-400">
+                Cargando la carta…
+              </div>
+            ) : (
+              <CustomerMenuView restaurant={restaurant} dishes={dishes} />
+            )}
+          </ErrorBoundary>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">
