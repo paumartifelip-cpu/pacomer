@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -124,13 +122,27 @@ body {
   white-space: nowrap;
 }
 
-.btn-cyan {
+.btn-cyan,
+.btn-primary {
   background: #00b4d8;
   color: #ffffff;
 }
 
-.btn-cyan:hover {
+.btn-cyan:hover,
+.btn-primary:hover {
   background: #0077b6;
+}
+
+.btn-primary {
+  box-shadow: 0 6px 16px rgba(0, 180, 216, 0.28);
+}
+
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .btn-secondary {
@@ -311,4 +323,64 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* Category pill strip: scrollable without a visible scrollbar */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Printing: only the table poster reaches the paper. */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  html,
+  body,
+  .app-container {
+    background: #ffffff !important;
+  }
+
+  .no-print,
+  header,
+  .modal-overlay,
+  .toast-notification {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .printable-area {
+    padding: 0 !important;
+    margin: 0 auto !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Keep the cyan accents and the QR contrast when printed. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .fintech-card,
+  .printable-area > div {
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  /* A dense QR (a long menu reaches ~129 modules) needs roughly 0.5 mm per
+     module to scan reliably on paper, hence the fixed physical size. */
+  .poster-qr {
+    width: 65mm !important;
+    height: 65mm !important;
+  }
 }

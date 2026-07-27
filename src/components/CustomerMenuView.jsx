@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Search, Sparkles, Bell, Check, Info } from 'lucide-react';
+import { Search, Phone, Info } from 'lucide-react';
 import { ALLERGENS } from '../data/presetMenus';
 
 export default function CustomerMenuView({ restaurant, dishes, isMobileSimulator = false }) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [callBellSent, setCallBellSent] = useState(false);
 
   const categories = [
     { id: 'all', label: 'Todo' },
@@ -15,9 +14,12 @@ export default function CustomerMenuView({ restaurant, dishes, isMobileSimulator
     { id: 'bebidas', label: 'Bebidas' }
   ];
 
-  const filteredDishes = dishes.filter(dish => {
+  const query = searchQuery.trim().toLowerCase();
+  const allDishes = Array.isArray(dishes) ? dishes : [];
+
+  const filteredDishes = allDishes.filter(dish => {
     if (activeCategory !== 'all' && dish.category !== activeCategory) return false;
-    if (searchQuery && !dish.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (query && !(dish.name || '').toLowerCase().includes(query)) return false;
     return true;
   });
 
@@ -36,11 +38,6 @@ export default function CustomerMenuView({ restaurant, dishes, isMobileSimulator
     segundos: filteredDishes.filter(d => d.category === 'segundos'),
     postres: filteredDishes.filter(d => d.category === 'postres'),
     bebidas: filteredDishes.filter(d => d.category === 'bebidas')
-  };
-
-  const handleCallWaiter = () => {
-    setCallBellSent(true);
-    setTimeout(() => setCallBellSent(false), 3000);
   };
 
   return (
@@ -112,6 +109,21 @@ export default function CustomerMenuView({ restaurant, dishes, isMobileSimulator
 
         {/* Grouped Dishes */}
         <div className="space-y-4">
+          {filteredDishes.length === 0 && (
+            <div className="fintech-card p-8 text-center space-y-1">
+              <p className="text-sm font-bold text-slate-700">
+                {allDishes.length === 0
+                  ? 'La carta de hoy todavía no está publicada.'
+                  : 'Ningún plato coincide con tu búsqueda.'}
+              </p>
+              <p className="text-xs text-slate-400 font-medium">
+                {allDishes.length === 0
+                  ? 'Pregunta a nuestro personal por el menú del día.'
+                  : 'Prueba con otra palabra o elige otra sección.'}
+              </p>
+            </div>
+          )}
+
           {Object.keys(groupedDishes).map(categoryKey => {
             const list = groupedDishes[categoryKey];
             if (list.length === 0) return null;
@@ -182,24 +194,24 @@ export default function CustomerMenuView({ restaurant, dishes, isMobileSimulator
           })}
         </div>
 
-        {/* Floating Action Button */}
-        <div className="mt-6 p-2 bg-white rounded-full border border-slate-100 shadow-sm flex items-center justify-between gap-2">
-          <button
-            onClick={handleCallWaiter}
-            className={`flex-1 py-2.5 px-4 rounded-full font-extrabold text-xs flex items-center justify-center gap-2 transition-all ${
-              callBellSent
-                ? 'bg-emerald-600 text-white'
-                : 'bg-slate-900 text-white hover:bg-slate-800'
-            }`}
-          >
-            <Bell className="w-3.5 h-3.5" />
-            <span>{callBellSent ? '¡Camarero avisado! 🔔' : 'Llamar al Camarero'}</span>
-          </button>
-        </div>
+        {/* Call the restaurant (real phone call, not a simulated bell) */}
+        {restaurant?.phone && (
+          <div className="mt-6 p-2 bg-white rounded-full border border-slate-100 shadow-sm">
+            <a
+              href={`tel:${restaurant.phone.replace(/\s+/g, '')}`}
+              className="w-full py-2.5 px-4 rounded-full font-extrabold text-xs flex items-center justify-center gap-2 bg-slate-900 text-white hover:bg-slate-800 transition-all"
+            >
+              <Phone className="w-3.5 h-3.5" />
+              <span>Llamar y Reservar</span>
+            </a>
+          </div>
+        )}
 
         <div className="mt-6 text-center text-[11px] text-slate-400 space-y-1 pb-4">
           <p>Avisa a nuestro personal en caso de alergias.</p>
-          <p className="font-extrabold text-slate-700">Paco Mer • Menú Digital</p>
+          <p className="font-extrabold text-slate-700">
+            {restaurant?.name || 'Paco Mer'} • Menú Digital
+          </p>
         </div>
       </div>
     </div>

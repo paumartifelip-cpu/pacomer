@@ -1,33 +1,50 @@
 /**
- * HTML5 Real-Time Sync Channel for Paco Mer
- * Connects the Waiter/Admin Panel with the Customer Table QR View in real-time
- * without causing infinite loop flickers.
+ * Live sync between tabs/windows of the SAME browser (waiter panel <-> preview
+ * or customer view opened on the same device). Cross-device sharing does not go
+ * through here: it travels inside the link itself, see utils/urlEncoder.js.
  */
 
 const SYNC_CHANNEL_NAME = 'pacomer_live_menu_sync';
+const KEY_RESTAURANT = 'pacomer_live_restaurant';
+const KEY_DISHES = 'pacomer_live_dishes';
+const KEY_STAMP = 'pacomer_last_update';
 
-// Generate a unique ID for the current browser tab to avoid self-broadcast loops
+// Unique id for this tab, so we ignore the echo of our own broadcasts.
 const MY_CLIENT_ID = 'client_' + Math.random().toString(36).substring(2, 9);
 
-// Broadcast menu updates from Waiter Panel to all active Customer Tabs/Views
-export function broadcastMenuUpdate(restaurant, dishes) {
+/** Read the menu saved by a previous session, or null. */
+export function loadPersistedMenu() {
   try {
-    const payload = {
-      restaurant,
-      dishes,
-      senderId: MY_CLIENT_ID,
-      timestamp: Date.now()
-    };
-    
-    // Save to LocalStorage
-    localStorage.setItem('pacomer_live_restaurant', JSON.stringify(restaurant));
-    localStorage.setItem('pacomer_live_dishes', JSON.stringify(dishes));
-    localStorage.setItem('pacomer_last_update', JSON.stringify({ senderId: MY_CLIENT_ID, time: Date.now() }));
+    const restaurant = JSON.parse(localStorage.getItem(KEY_RESTAURANT) || 'null');
+    const dishes = JSON.parse(localStorage.getItem(KEY_DISHES) || 'null');
+    return { restaurant, dishes: Array.isArray(dishes) ? dishes : null };
+  } catch (e) {
+    return { restaurant: null, dishes: null };
+  }
+}
 
-    // Broadcast across browser tabs via BroadcastChannel
+/** Save locally without notifying other tabs (used for remote/incoming state). */
+export function persistMenu(restaurant, dishes) {
+  try {
+    localStorage.setItem(KEY_RESTAURANT, JSON.stringify(restaurant));
+    localStorage.setItem(KEY_DISHES, JSON.stringify(dishes));
+  } catch (e) {
+    console.error('Error saving menu locally:', e);
+  }
+}
+
+/** Save locally AND push the change to every other tab of this browser. */
+export function broadcastMenuUpdate(restaurant, dishes) {
+  persistMenu(restaurant, dishes);
+  try {
+    localStorage.setItem(
+      KEY_STAMP,
+      JSON.stringify({ senderId: MY_CLIENT_ID, time: Date.now() })
+    );
+
     if ('BroadcastChannel' in window) {
       const channel = new BroadcastChannel(SYNC_CHANNEL_NAME);
-      channel.postMessage(payload);
+      channel.postMessage({ restaurant, dishes, senderId: MY_CLIENT_ID });
       channel.close();
     }
   } catch (e) {
@@ -35,46 +52,39 @@ export function broadcastMenuUpdate(restaurant, dishes) {
   }
 }
 
-// Listen for live menu updates in the Customer QR View
+/** Subscribe to menu changes made in other tabs. Returns an unsubscribe fn. */
 export function subscribeToMenuUpdates(onUpdate) {
   let channel = null;
 
   const handlePayload = (payload) => {
-    // IGNORE self-broadcast messages to prevent infinite re-render loop!
-    if (!payload || payload.senderId === MY_CLIENT_ID) {
-      return;
-    }
-
-    if (payload.restaurant && payload.dishes) {
+    // Ignore our own echo, otherwise the tabs would loop forever.
+    if (!payload || payload.senderId === MY_CLIENT_ID) return;
+    if (payload.restaurant && Array.isArray(payload.dishes)) {
       onUpdate(payload.restaurant, payload.dishes);
     }
   };
 
-  // 1. Listen via BroadcastChannel
   if ('BroadcastChannel' in window) {
     try {
       channel = new BroadcastChannel(SYNC_CHANNEL_NAME);
-      channel.onmessage = (event) => {
-        handlePayload(event.data);
-      };
+      channel.onmessage = (event) => handlePayload(event.data);
     } catch (e) {
-      console.error(e);
+      console.error('BroadcastChannel unavailable:', e);
     }
   }
 
-  // 2. Listen via LocalStorage window event
+  // Fallback for browsers without BroadcastChannel (and for cross-window sync).
   const storageListener = (e) => {
-    if (e.key === 'pacomer_last_update') {
-      try {
-        const updateInfo = JSON.parse(e.newValue);
-        if (updateInfo && updateInfo.senderId !== MY_CLIENT_ID) {
-          const r = JSON.parse(localStorage.getItem('pacomer_live_restaurant'));
-          const d = JSON.parse(localStorage.getItem('pacomer_live_dishes'));
-          if (r && d) {
-            handlePayload({ restaurant: r, dishes: d, senderId: updateInfo.senderId });
-          }
-        }
-      } catch (err) {}
+    if (e.key !== KEY_STAMP) return;
+    try {
+      const stamp = JSON.parse(e.newValue);
+      if (!stamp || stamp.senderId === MY_CLIENT_ID) return;
+      const { restaurant, dishes } = loadPersistedMenu();
+      if (restaurant && dishes) {
+        handlePayload({ restaurant, dishes, senderId: stamp.senderId });
+      }
+    } catch (err) {
+      /* ignore malformed payloads */
     }
   };
 
@@ -82,14 +92,8 @@ export function subscribeToMenuUpdates(onUpdate) {
 
   return () => {
     if (channel) {
-      try { channel.close(); } catch (e) {}
+      try { channel.close(); } catch (e) { /* already closed */ }
     }
     window.removeEventListener('storage', storageListener);
   };
-}
-
-// Fixed Permanent Table QR URL
-export function getPermanentTableQrUrl() {
-  const baseUrl = window.location.origin + window.location.pathname;
-  return `${baseUrl}#view`;
 }

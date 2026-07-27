@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Component } from 'react';
+import React, { useState, useEffect, useRef, Component } from 'react';
 import Navbar from './components/Navbar';
 import AdminDashboard from './components/AdminDashboard';
 import CustomerMenuView from './components/CustomerMenuView';
@@ -7,8 +7,13 @@ import DishFormModal from './components/DishFormModal';
 import PresetSelectorModal from './components/PresetSelectorModal';
 import ShareMenuModal from './components/ShareMenuModal';
 import { INITIAL_RESTAURANT, INITIAL_DISHES } from './data/presetMenus';
-import { parseMenuFromCurrentUrl } from './utils/urlEncoder';
-import { broadcastMenuUpdate, subscribeToMenuUpdates } from './utils/syncChannel';
+import { parseMenuFromCurrentUrl, currentUrlHasMenu } from './utils/urlEncoder';
+import {
+  broadcastMenuUpdate,
+  persistMenu,
+  loadPersistedMenu,
+  subscribeToMenuUpdates
+} from './utils/syncChannel';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -19,7 +24,7 @@ class ErrorBoundary extends Component {
     return { hasError: true };
   }
   componentDidCatch(error, errorInfo) {
-    console.error("React Component Error:", error, errorInfo);
+    console.error('React Component Error:', error, errorInfo);
   }
   render() {
     if (this.state.hasError) {
@@ -40,149 +45,127 @@ class ErrorBoundary extends Component {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('admin'); // 'admin', 'customer', 'qrstand'
-
-  // Restaurant State
-  const [restaurant, setRestaurant] = useState(() => {
+  // A link with an embedded menu always lands on the customer view.
+  const [activeTab, setActiveTab] = useState(() => {
     try {
-      const saved = localStorage.getItem('pacomer_live_restaurant');
-      return saved ? JSON.parse(saved) : INITIAL_RESTAURANT;
+      const hash = window.location.hash;
+      return hash === '#view' || hash.includes('menu=') ? 'customer' : 'admin';
     } catch (e) {
-      return INITIAL_RESTAURANT;
+      return 'admin';
     }
   });
 
-  // Dishes State
-  const [dishes, setDishes] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pacomer_live_dishes');
-      return saved ? JSON.parse(saved) : INITIAL_DISHES;
-    } catch (e) {
-      return INITIAL_DISHES;
-    }
-  });
+  // Lazy initialisers: localStorage is read on mount only, never on re-render.
+  const [restaurant, setRestaurant] = useState(
+    () => loadPersistedMenu().restaurant || INITIAL_RESTAURANT
+  );
+  const [dishes, setDishes] = useState(
+    () => loadPersistedMenu().dishes || INITIAL_DISHES
+  );
 
-  // Toast Notification State
+  // A shared menu is decoded asynchronously; hold the customer view until then
+  // so nobody sees the demo menu flash before the real one.
+  const [isDecodingSharedMenu, setIsDecodingSharedMenu] = useState(() => currentUrlHasMenu());
+
   const [toastMessage, setToastMessage] = useState('');
-  const [showCopiedToast, setShowCopiedToast] = useState(false);
 
-  // Modals
   const [isDishModalOpen, setIsDishModalOpen] = useState(false);
   const [editingDish, setEditingDish] = useState(null);
   const [defaultCategory, setDefaultCategory] = useState('primeros');
   const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-  // Parse URL Hash or check if view tab requested
-  useEffect(() => {
-    try {
-      const hash = window.location.hash;
-      if (hash === '#view' || hash.includes('menu=')) {
-        setActiveTab('customer');
-      }
-      const urlMenu = parseMenuFromCurrentUrl();
-      if (urlMenu) {
-        if (urlMenu.restaurant) setRestaurant(urlMenu.restaurant);
-        if (urlMenu.dishes) setDishes(urlMenu.dishes);
-      }
-    } catch (e) {
-      console.error('Hash parse error:', e);
-    }
-  }, []);
+  // Marks state changes that came from outside this tab, so we save them
+  // locally but never echo them back and start a broadcast loop.
+  const skipBroadcastRef = useRef(true);
 
-  // Real-Time HTML5 Cross-Tab Sync (Only trigger on external tab updates)
-  useEffect(() => {
-    const unsubscribe = subscribeToMenuUpdates((newR, newD) => {
-      setRestaurant(newR);
-      setDishes(newD);
-      triggerToast('✨ ¡Menú actualizado en tiempo real!');
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Helper to update restaurant state and broadcast
-  const updateRestaurant = (updater) => {
-    setRestaurant(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      broadcastMenuUpdate(next, dishes);
-      return next;
-    });
-  };
-
-  // Helper to update dishes state and broadcast
-  const updateDishes = (updater) => {
-    setDishes(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      broadcastMenuUpdate(restaurant, next);
-      return next;
-    });
-  };
-
-  // Toast Trigger
   const triggerToast = (msg) => {
     setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage('');
-    }, 2500);
+    setTimeout(() => setToastMessage(''), 2500);
   };
 
-  // Open Dish Modal
+  // Load a menu embedded in the URL (a scanned QR or a shared link).
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const urlMenu = await parseMenuFromCurrentUrl();
+        if (cancelled || !urlMenu) return;
+        skipBroadcastRef.current = true;
+        if (urlMenu.restaurant) setRestaurant(urlMenu.restaurant);
+        if (Array.isArray(urlMenu.dishes)) setDishes(urlMenu.dishes);
+      } catch (e) {
+        console.error('Could not read the menu from the URL:', e);
+      } finally {
+        if (!cancelled) setIsDecodingSharedMenu(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, []);
+
+  // Live sync with other tabs of this same browser.
+  useEffect(() => {
+    return subscribeToMenuUpdates((newRestaurant, newDishes) => {
+      skipBroadcastRef.current = true;
+      setRestaurant(newRestaurant);
+      setDishes(newDishes);
+      triggerToast('✨ ¡Menú actualizado en tiempo real!');
+    });
+  }, []);
+
+  // Single place where the menu is saved and published. Keeping this out of the
+  // state updaters means no duplicate broadcasts under StrictMode and no risk
+  // of publishing a stale restaurant alongside fresh dishes.
+  useEffect(() => {
+    if (skipBroadcastRef.current) {
+      skipBroadcastRef.current = false;
+      persistMenu(restaurant, dishes);
+      return;
+    }
+    broadcastMenuUpdate(restaurant, dishes);
+  }, [restaurant, dishes]);
+
   const handleOpenDishModal = (dish = null, category = 'primeros') => {
     setEditingDish(dish);
     setDefaultCategory(category);
     setIsDishModalOpen(true);
   };
 
-  // Save Dish
   const handleSaveDish = (dishData) => {
     if (editingDish) {
-      updateDishes(prev => prev.map(d => d.id === editingDish.id ? { ...d, ...dishData } : d));
+      setDishes(prev => prev.map(d => (d.id === editingDish.id ? { ...d, ...dishData } : d)));
       triggerToast('Plato actualizado correctamente');
     } else {
-      const newDish = {
-        id: 'd_' + Date.now(),
-        ...dishData
-      };
-      updateDishes(prev => [...prev, newDish]);
+      setDishes(prev => [...prev, { id: 'd_' + Date.now(), ...dishData }]);
       triggerToast('Nuevo plato añadido al menú');
     }
   };
 
-  // Apply Preset Template
   const handleApplyPreset = (preset) => {
-    let nextRestaurant = restaurant;
     if (preset.fullPrice) {
-      nextRestaurant = { ...restaurant, fullPrice: preset.fullPrice };
-      setRestaurant(nextRestaurant);
+      setRestaurant(prev => ({ ...prev, fullPrice: preset.fullPrice }));
     }
-    const newDishes = preset.dishes.map((dish, i) => ({
+    setDishes(preset.dishes.map((dish, i) => ({
       id: 'd_preset_' + Date.now() + '_' + i,
       ...dish
-    }));
-    setDishes(newDishes);
-    broadcastMenuUpdate(nextRestaurant, newDishes);
+    })));
     triggerToast(`Plantilla "${preset.title}" cargada`);
   };
 
   return (
     <div className="app-container">
-      {/* Top Navbar */}
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onCopyShareLink={() => setIsShareModalOpen(true)}
-        showCopiedToast={showCopiedToast}
-      />
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} onShare={() => setIsShareModalOpen(true)} />
 
-      {/* Main Content Body with Error Boundary Protection */}
       <main className="flex-1">
         <ErrorBoundary>
           {activeTab === 'admin' && (
             <AdminDashboard
               restaurant={restaurant}
-              setRestaurant={updateRestaurant}
+              setRestaurant={setRestaurant}
               dishes={dishes}
-              setDishes={updateDishes}
+              setDishes={setDishes}
               onOpenDishModal={handleOpenDishModal}
               onOpenPresetModal={() => setIsPresetModalOpen(true)}
               onOpenShareModal={() => setIsShareModalOpen(true)}
@@ -191,10 +174,13 @@ export default function App() {
           )}
 
           {activeTab === 'customer' && (
-            <CustomerMenuView
-              restaurant={restaurant}
-              dishes={dishes}
-            />
+            isDecodingSharedMenu ? (
+              <div className="py-24 text-center text-sm font-bold text-slate-400">
+                Cargando la carta…
+              </div>
+            ) : (
+              <CustomerMenuView restaurant={restaurant} dishes={dishes} />
+            )
           )}
 
           {activeTab === 'qrstand' && (
@@ -207,7 +193,6 @@ export default function App() {
         </ErrorBoundary>
       </main>
 
-      {/* Modals */}
       <DishFormModal
         isOpen={isDishModalOpen}
         onClose={() => setIsDishModalOpen(false)}
@@ -230,10 +215,8 @@ export default function App() {
         onShowToast={triggerToast}
       />
 
-      {/* Toast Notification Floating Banner */}
       {toastMessage && (
-        <div className="toast-notification font-bold">
-          <span>✨</span>
+        <div className="toast-notification no-print font-bold">
           <span>{toastMessage}</span>
         </div>
       )}

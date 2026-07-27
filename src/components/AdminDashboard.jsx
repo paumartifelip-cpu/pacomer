@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
 import {
-  Plus, Edit2, Trash2, ArrowUp, ArrowDown, Sparkles, Copy,
-  Check, Smartphone, Share2, Search, X, QrCode, Info, ChevronRight, Utensils
+  Plus, Edit2, Trash2, ArrowUp, ArrowDown, Sparkles,
+  Smartphone, Share2, Search, X, QrCode, Info
 } from 'lucide-react';
 import CustomerMenuView from './CustomerMenuView';
+
+const CATEGORIES = [
+  { id: 'primeros', title: 'Primeros Platos', icon: '🥗', colorBg: 'bg-purple-100 text-purple-700' },
+  { id: 'segundos', title: 'Segundos Platos', icon: '🥩', colorBg: 'bg-amber-100 text-amber-700' },
+  { id: 'postres', title: 'Postres Caseros', icon: '🍰', colorBg: 'bg-emerald-100 text-emerald-700' },
+  { id: 'bebidas', title: 'Bebidas & Sugerencias', icon: '🍷', colorBg: 'bg-blue-100 text-blue-700' }
+];
 
 export default function AdminDashboard({
   restaurant,
@@ -36,14 +43,22 @@ export default function AdminDashboard({
     onShowToast('Plato eliminado');
   };
 
-  const moveDish = (index, direction) => {
-    const newDishes = [...dishes];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= newDishes.length) return;
-    const temp = newDishes[index];
-    newDishes[index] = newDishes[targetIndex];
-    newDishes[targetIndex] = temp;
-    setDishes(newDishes);
+  // Reorder within the dish's own section. Swapping by global index would trade
+  // places with a dish from another category, which looks like nothing happened.
+  const moveDish = (dish, direction) => {
+    setDishes(prev => {
+      const sameCategory = prev.filter(d => d.category === dish.category);
+      const position = sameCategory.findIndex(d => d.id === dish.id);
+      const target = direction === 'up' ? position - 1 : position + 1;
+      if (position === -1 || target < 0 || target >= sameCategory.length) return prev;
+
+      const from = prev.findIndex(d => d.id === dish.id);
+      const to = prev.findIndex(d => d.id === sameCategory[target].id);
+      const next = [...prev];
+      next[from] = prev[to];
+      next[to] = prev[from];
+      return next;
+    });
   };
 
   const handleClearAll = () => {
@@ -54,9 +69,17 @@ export default function AdminDashboard({
   };
 
   const getDishesByCategory = (catKey) => {
+    const query = searchQuery.trim().toLowerCase();
     return dishes
       .filter(d => d.category === catKey)
-      .filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      .filter(d => !query || (d.name || '').toLowerCase().includes(query));
+  };
+
+  // Position inside the section, ignoring the search filter, so the up/down
+  // arrows stay correct while searching.
+  const getPositionInCategory = (dish) => {
+    const sameCategory = dishes.filter(d => d.category === dish.category);
+    return { index: sameCategory.findIndex(d => d.id === dish.id), total: sameCategory.length };
   };
 
   return (
@@ -188,7 +211,7 @@ export default function AdminDashboard({
               <label className="form-label">Nombre del Local</label>
               <input
                 type="text"
-                value={restaurant.name}
+                value={restaurant?.name ?? ''}
                 onChange={e => handleRestaurantChange('name', e.target.value)}
                 className="form-input font-bold text-slate-900"
               />
@@ -198,7 +221,7 @@ export default function AdminDashboard({
               <label className="form-label">Precio Menú Completo (€)</label>
               <input
                 type="text"
-                value={restaurant.fullPrice}
+                value={restaurant?.fullPrice ?? ''}
                 onChange={e => handleRestaurantChange('fullPrice', e.target.value)}
                 className="form-input font-extrabold text-[#00b4d8]"
               />
@@ -208,7 +231,7 @@ export default function AdminDashboard({
               <label className="form-label">Qué Incluye el Menú</label>
               <input
                 type="text"
-                value={restaurant.includesText}
+                value={restaurant?.includesText ?? ''}
                 onChange={e => handleRestaurantChange('includesText', e.target.value)}
                 className="form-input text-xs"
                 placeholder="Ej: Incluye Pan, 1 Bebida y Postre/Café"
@@ -219,7 +242,7 @@ export default function AdminDashboard({
               <label className="form-label">Teléfono de Reservas</label>
               <input
                 type="text"
-                value={restaurant.phone}
+                value={restaurant?.phone ?? ''}
                 onChange={e => handleRestaurantChange('phone', e.target.value)}
                 className="form-input text-xs"
               />
@@ -236,12 +259,7 @@ export default function AdminDashboard({
             </h3>
           </div>
 
-          {[
-            { id: 'primeros', title: 'Primeros Platos', icon: '🥗', colorBg: 'bg-purple-100 text-purple-700' },
-            { id: 'segundos', title: 'Segundos Platos', icon: '🥩', colorBg: 'bg-amber-100 text-amber-700' },
-            { id: 'postres', title: 'Postres Caseros', icon: '🍰', colorBg: 'bg-emerald-100 text-emerald-700' },
-            { id: 'bebidas', title: 'Bebidas & Sugerencias', icon: '🍷', colorBg: 'bg-blue-100 text-blue-700' }
-          ].map(cat => {
+          {CATEGORIES.map(cat => {
             const catDishes = getDishesByCategory(cat.id);
             return (
               <div key={cat.id} className="fintech-card p-6 space-y-4">
@@ -275,8 +293,8 @@ export default function AdminDashboard({
                   </div>
                 ) : (
                   <div className="divide-y divide-slate-100">
-                    {catDishes.map((dish, index) => {
-                      const globalIndex = dishes.findIndex(d => d.id === dish.id);
+                    {catDishes.map((dish) => {
+                      const { index: posInCategory, total: categoryTotal } = getPositionInCategory(dish);
                       return (
                         <div
                           key={dish.id}
@@ -325,16 +343,16 @@ export default function AdminDashboard({
 
                             <div className="flex items-center border border-slate-200 rounded-full overflow-hidden">
                               <button
-                                onClick={() => moveDish(globalIndex, 'up')}
-                                disabled={globalIndex === 0}
+                                onClick={() => moveDish(dish, 'up')}
+                                disabled={posInCategory <= 0}
                                 className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30 border-r border-slate-200"
                                 title="Subir"
                               >
                                 <ArrowUp className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => moveDish(globalIndex, 'down')}
-                                disabled={globalIndex === dishes.length - 1}
+                                onClick={() => moveDish(dish, 'down')}
+                                disabled={posInCategory === categoryTotal - 1}
                                 className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-600 disabled:opacity-30"
                                 title="Bajar"
                               >

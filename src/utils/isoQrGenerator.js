@@ -1,43 +1,29 @@
 import QRCode from 'qrcode';
 
 /**
- * 100% ISO/IEC 18004 Compliant QR Code Generator using world-standard 'qrcode' engine.
- * Scannable by any iOS Camera, Android Google Lens, or barcode scanner app in milliseconds.
+ * ISO/IEC 18004 QR codes via the standard 'qrcode' engine, so any phone camera
+ * reads them. Long menus need more capacity than error-correction level M
+ * allows, so we retry at L before giving up.
  */
 
-export async function generateIsoQrDataUrl(text, size = 300) {
-  try {
-    if (!text) return '';
-    return await QRCode.toDataURL(text, {
-      width: size,
-      margin: 1,
-      errorCorrectionLevel: 'M',
-      color: {
-        dark: '#0f172a',
-        light: '#ffffff'
-      }
-    });
-  } catch (err) {
-    console.error('Error generating ISO QR Code Data URL:', err);
-    return '';
-  }
-}
+const LEVELS = ['M', 'L'];
 
-export async function generateIsoQrSvg(text, size = 220) {
-  try {
-    if (!text) return '';
-    return await QRCode.toString(text, {
-      type: 'svg',
-      width: size,
-      margin: 1,
-      errorCorrectionLevel: 'M',
-      color: {
-        dark: '#0f172a',
-        light: '#ffffff'
-      }
-    });
-  } catch (err) {
-    console.error('Error generating ISO QR Code SVG:', err);
-    return '';
+export async function generateIsoQrDataUrl(text, size = 600) {
+  if (!text) return '';
+
+  for (const errorCorrectionLevel of LEVELS) {
+    try {
+      return await QRCode.toDataURL(text, {
+        width: size,
+        margin: 1,
+        errorCorrectionLevel,
+        color: { dark: '#0f172a', light: '#ffffff' }
+      });
+    } catch (err) {
+      /* too much data for this level, try the next one */
+    }
   }
+
+  console.error('Menu URL is too long to fit in a QR code:', text.length, 'chars');
+  return '';
 }
