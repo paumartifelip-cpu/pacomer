@@ -1,0 +1,10 @@
+# Cloudflare Pages configuration.
+#
+# Without this file the project falls back to the dashboard settings, which
+# publish the repository root as-is. That serves the *source* index.html, whose
+# <script src="/src/main.jsx"> is untranspiled JSX: the browser refuses it as a
+# module and the page renders blank. Pinning the output directory here keeps the
+# published site as the compiled bundle, in the repo and under review.
+name = "pacomer"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-07-26"

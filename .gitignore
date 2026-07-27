@@ -1,6 +1,10 @@
 node_modules
 .DS_Store
-dist
+# dist/ is committed on purpose: the Cloudflare Pages project has no build
+# command configured, so it publishes whatever the repository contains. Until a
+# `npm run build` step is set in the dashboard, the compiled bundle has to be in
+# git or the deployed site is a blank page. Run `npm run build` before commits
+# that touch src/, index.html or the styles.
 dist-ssr
 *.local
 .env
